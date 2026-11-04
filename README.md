@@ -29,7 +29,7 @@ No Jupyter ou Google Colab, você também pode executar em uma célula:
 %pip install -r requirements.txt
 ```
 
-Depois, abra `rubikscube.ipynb`. O notebook usa NumPy.
+Depois, abra `rubikscube.ipynb`. O notebook usa NumPy para as coordenadas e Matplotlib para a visualização 3D.
 
 ## Plano de estudo
 
