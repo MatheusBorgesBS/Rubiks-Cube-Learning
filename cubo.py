@@ -3,6 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import re 
 
 
 ORDEM_FACES = ("U", "L", "F", "R", "B", "D")
@@ -41,6 +42,14 @@ cores_plot = {
     "O": "orange",
     "Y": "yellow",
 }
+cores_plot_ids = {
+    "0": "white",
+    "1": "green",
+    "2": "red",
+    "3": "blue",
+    "4": "orange",
+    "5": "yellow",
+}
 def print_cubo(cubo):
     c = np.array(cubo, dtype=str)
 
@@ -71,14 +80,21 @@ def print_cubo(cubo):
         print(f"{espaço}{D[i,0]} {D[i,1]} {D[i,2]}")
 
 
-def plotar_cubo(cubo, elev=25, azim=-55, ax=None):
+def plotar_cubo(cubo, elev=25, azim=-55, ax=None, ids=False):
+
     cubo = np.asarray(cubo)
+
+    if cubo.shape != (54,):
+        raise ValueError("O cubo deve ser um vetor de 54 adesivos.")
+
+    # Select the appropriate color dictionary
+    cores = cores_plot_ids if ids else cores_plot
+
     if ax is None:
         fig = plt.figure(figsize=(4, 4))
         ax = fig.add_subplot(111, projection="3d")
 
-    # Direção da câmera, considerando a convenção
-    # de azimute e elevação do Matplotlib.
+    # Camera direction
     a = np.radians(azim)
     e = np.radians(elev)
 
@@ -92,20 +108,19 @@ def plotar_cubo(cubo, elev=25, azim=-55, ax=None):
     cores = []
 
     for inicio, grade, direcao_linha, direcao_coluna, normal in faces_3d:
+
         vl = np.asarray(direcao_linha, dtype=float)
         vc = np.asarray(direcao_coluna, dtype=float)
         n = np.asarray(normal, dtype=float)
 
-        # Não desenhar faces opostas à câmera
+        # Hide faces opposite to the camera
         if np.dot(n, camera) <= 0:
             continue
 
         for linha in range(3):
             for coluna in range(3):
-                centro = grade[linha, coluna].astype(float)
 
-                # Face exterior do cubo, em vez do
-                # plano passando pelo centro da peça
+                centro = grade[linha, coluna].astype(float)
                 centro = centro + 0.5 * n
 
                 tamanho = 0.46
@@ -119,9 +134,18 @@ def plotar_cubo(cubo, elev=25, azim=-55, ax=None):
 
                 quadrados.append(cantos)
 
-                cor = cores_plot[
-                    str(cubo[inicio + 3*linha + coluna])
-                ]
+                valor = cubo[inicio + 3*linha + coluna]
+
+                if ids:
+                    # Sticker ID -> original face ID
+                    valor = int(valor) // 9
+
+                cor = (
+                    cores_plot_ids[str(valor)]
+                    if ids
+                    else cores_plot[str(valor)]
+                )
+
                 cores.append(cor)
 
     adesivos = Poly3DCollection(
@@ -143,8 +167,8 @@ def plotar_cubo(cubo, elev=25, azim=-55, ax=None):
     ax.set_axis_off()
     ax.set_proj_type("ortho")
 
-    if ax.figure is not None:
-        return ax
+    return ax
+
 
 
 def girar_cubo(cubo, mapa_de_permutacao):
@@ -219,3 +243,15 @@ for face in faces:
     mapas_movimentos[face] = mapa
     mapas_movimentos[face + "'"] = np.argsort(mapa)
     mapas_movimentos[face + "2"] = mapa[mapa]
+
+
+
+def scramble(moves, estado):
+    all_moves = re.findall(r"[ULFRBD](?:2|')?", moves)
+
+    for move in all_moves:
+        estado = girar_cubo(estado, mapas_movimentos[move])
+
+    return estado
+
+        
