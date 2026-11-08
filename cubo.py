@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import re 
+import random
 
 
 ORDEM_FACES = ("U", "L", "F", "R", "B", "D")
@@ -254,4 +255,25 @@ def scramble(moves, estado):
 
     return estado
 
+
+
+def scramble_aleatorio(estado, n=int):
+
+    movimentos = list(mapas_movimentos.keys())
+    ultimo_movimento = None
+    sequencia = []
+
+    for _ in range(n):
+
+        opcoes = [move for move in movimentos if move[0] != ultimo_movimento]
+
+        move = random.choice(opcoes)
+
+        sequencia.append(move)
+
+        estado = girar_cubo(estado,mapas_movimentos[move])
+
+        ultimo_movimento = move[0]
+
+    return estado, sequencia
         
